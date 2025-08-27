@@ -2483,17 +2483,17 @@
 </head>
 <body>
     <!-- Botón de cambio de tema -->
-    <div class="theme-toggle" id="themeToggle" onclick="app.toggleTheme()">
+    <div class="theme-toggle" id="themeToggle">
         <div class="theme-slider" id="themeSlider">☀️</div>
     </div>
 
     <!-- Botón de modo reunión -->
-    <div class="meeting-toggle" id="meetingToggle" onclick="app.toggleMeetingMode()" title="Modo Reunión">
+    <div class="meeting-toggle" id="meetingToggle" title="Modo Reunión">
         <div class="meeting-icon">👥</div>
     </div>
 
     <!-- Botón de feedback -->
-    <div class="feedback-toggle" onclick="app.openFeedback()" title="Enviar Feedback">
+    <div class="feedback-toggle" id="feedbackToggle" title="Enviar Feedback">
         <div class="feedback-icon">💬</div>
     </div>
 
@@ -2506,7 +2506,7 @@
             <div id="moodStatus" class="mood-status" style="display: none;">
                 <span class="mood-status-emoji" id="currentMoodEmoji"></span>
                 <span>Hoy te sientes: <strong id="currentMoodText"></strong></span>
-                <button class="edit-mood-btn" onclick="app.showMoodModal()">Editar</button>
+                <button class="edit-mood-btn" id="editMoodBtn">Editar</button>
             </div>
             
 
@@ -2553,12 +2553,12 @@
                     <div class="stat-item">
                         <div class="stat-number" id="pomodoroCount">0</div>
                         <div class="stat-label">Pomodoros Completados</div>
-                        <button class="reset-stat-btn" onclick="app.resetPomodoros()" title="Reiniciar contador de Pomodoros">🔄</button>
+                        <button class="reset-stat-btn" id="resetPomodorosBtn" title="Reiniciar contador de Pomodoros">🔄</button>
                     </div>
                     <div class="stat-item">
                         <div class="stat-number" id="tasksCompletedCount">0</div>
                         <div class="stat-label">Tareas Completadas</div>
-                        <button class="reset-stat-btn" onclick="app.resetTasksCompleted()" title="Reiniciar contador de tareas">🔄</button>
+                        <button class="reset-stat-btn" id="resetTasksBtn" title="Reiniciar contador de tareas">🔄</button>
                     </div>
                 </div>
                 <div class="plants-container">
@@ -2570,7 +2570,7 @@
         
         <div class="tasks-section">
             <div class="sounds-section">
-                <button class="sounds-toggle" id="soundsToggle" onclick="app.toggleSoundsSection()">
+                <button class="sounds-toggle" id="soundsToggle">
                     <span>🎵 Audio de Concentración</span>
                     <span class="toggle-arrow">▼</span>
                 </button>
@@ -2644,7 +2644,7 @@
             </div>
 
             <div id="personalizedMessage" class="personalized-message" style="display: none;">
-                <button class="close-message-btn" onclick="app.closePersonalizedMessage()">×</button>
+                <button class="close-message-btn" id="closeMessageBtn">×</button>
             </div>
 
             <h2 class="section-title">📝Mis Tareas de Hoy</h2>
@@ -2776,7 +2776,7 @@
             </div>
             
             <div class="ritual-controls">
-                <button class="btn btn-secondary" onclick="app.closeBreathingModal()">No, gracias</button>
+                <button class="btn btn-secondary" id="closeBreathingBtn">No, gracias</button>
             </div>
         </div>
     </div>
@@ -3240,21 +3240,43 @@
                 const message = document.getElementById('transitionMessage');
                 const buttonsContainer = document.getElementById('transitionButtons');
                 
+                buttonsContainer.innerHTML = '';
                 if (type === 'pomodoro') {
                     title.textContent = '🎉 ¡Pomodoro Completado!';
                     message.textContent = '¿Quieres tomar un descanso corto o largo?';
-                    buttonsContainer.innerHTML = `
-                        <button class="transition-btn" onclick="app.selectBreakType('short')">Descanso Corto (5 min)</button>
-                        <button class="transition-btn" onclick="app.selectBreakType('long')">Descanso Largo (10 min)</button>
-                        <button class="transition-btn secondary" onclick="app.closeTransitionModal()">Continuar Trabajando</button>
-                    `;
+
+                    const shortBtn = document.createElement('button');
+                    shortBtn.className = 'transition-btn';
+                    shortBtn.textContent = 'Descanso Corto (5 min)';
+                    shortBtn.addEventListener('click', () => this.selectBreakType('short'));
+                    buttonsContainer.appendChild(shortBtn);
+
+                    const longBtn = document.createElement('button');
+                    longBtn.className = 'transition-btn';
+                    longBtn.textContent = 'Descanso Largo (10 min)';
+                    longBtn.addEventListener('click', () => this.selectBreakType('long'));
+                    buttonsContainer.appendChild(longBtn);
+
+                    const contBtn = document.createElement('button');
+                    contBtn.className = 'transition-btn secondary';
+                    contBtn.textContent = 'Continuar Trabajando';
+                    contBtn.addEventListener('click', () => this.closeTransitionModal());
+                    buttonsContainer.appendChild(contBtn);
                 } else {
                     title.textContent = '✨ ¡Descanso Terminado!';
                     message.textContent = '¿Estás listo para empezar otro Pomodoro?';
-                    buttonsContainer.innerHTML = `
-                        <button class="transition-btn" onclick="app.startNewPomodoro()">¡Sí, empezar Pomodoro!</button>
-                        <button class="transition-btn secondary" onclick="app.closeTransitionModal()">Más tarde</button>
-                    `;
+
+                    const startBtn = document.createElement('button');
+                    startBtn.className = 'transition-btn';
+                    startBtn.textContent = '¡Sí, empezar Pomodoro!';
+                    startBtn.addEventListener('click', () => this.startNewPomodoro());
+                    buttonsContainer.appendChild(startBtn);
+
+                    const laterBtn = document.createElement('button');
+                    laterBtn.className = 'transition-btn secondary';
+                    laterBtn.textContent = 'Más tarde';
+                    laterBtn.addEventListener('click', () => this.closeTransitionModal());
+                    buttonsContainer.appendChild(laterBtn);
                 }
                 
                 // Mostrar sugerencia de descanso si es necesario
@@ -3505,21 +3527,25 @@
                     if (task.editing) {
                         taskElement.innerHTML = `
                             <div class="drag-handle">⋮⋮</div>
-                            <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
-                                 onclick="app.toggleTask(${task.id})"></div>
+                            <div class="task-checkbox ${task.completed ? 'checked' : ''}"></div>
                             <input type="text" class="task-edit-input" value="${task.text}" id="edit-${task.id}">
-                            <button class="save-btn" onclick="app.saveTask(${task.id})" title="Guardar">✅</button>
-                            <button class="cancel-btn" onclick="app.cancelEdit(${task.id})" title="Cancelar">❌</button>
+                            <button class="save-btn" title="Guardar">✅</button>
+                            <button class="cancel-btn" title="Cancelar">❌</button>
                         `;
+                        taskElement.querySelector('.task-checkbox').addEventListener('click', () => this.toggleTask(task.id));
+                        taskElement.querySelector('.save-btn').addEventListener('click', () => this.saveTask(task.id));
+                        taskElement.querySelector('.cancel-btn').addEventListener('click', () => this.cancelEdit(task.id));
                     } else {
                         taskElement.innerHTML = `
                             <div class="drag-handle">⋮⋮</div>
-                            <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
-                                 onclick="app.toggleTask(${task.id})"></div>
+                            <div class="task-checkbox ${task.completed ? 'checked' : ''}"></div>
                             <div class="task-text ${task.completed ? 'completed' : ''}">${task.text}</div>
-                            <button class="edit-btn" onclick="app.editTask(${task.id})" title="Editar">✏️</button>
-                            <button class="delete-btn" onclick="app.deleteTask(${task.id})" title="Eliminar">🗑️</button>
+                            <button class="edit-btn" title="Editar">✏️</button>
+                            <button class="delete-btn" title="Eliminar">🗑️</button>
                         `;
+                        taskElement.querySelector('.task-checkbox').addEventListener('click', () => this.toggleTask(task.id));
+                        taskElement.querySelector('.edit-btn').addEventListener('click', () => this.editTask(task.id));
+                        taskElement.querySelector('.delete-btn').addEventListener('click', () => this.deleteTask(task.id));
                     }
                     
                     // Add drag and drop event listeners
@@ -3692,7 +3718,9 @@
                 };
                 
                 const messageElement = document.getElementById('personalizedMessage');
-                messageElement.innerHTML = `${messages[this.currentMood]}<button class="close-message-btn" onclick="app.closePersonalizedMessage()">×</button>`;
+                const closeBtn = document.getElementById('closeMessageBtn');
+                messageElement.innerHTML = messages[this.currentMood];
+                messageElement.appendChild(closeBtn);
                 messageElement.style.display = 'block';
             }
 
@@ -5149,11 +5177,13 @@
                     noteElement.innerHTML = `
                         <div class="parking-text">${note.text}</div>
                         <div class="parking-actions">
-                            <button class="parking-action-btn delete" onclick="app.deleteParkingNote(${note.id})">
+                            <button class="parking-action-btn delete">
                                 Eliminar
                             </button>
                         </div>
                     `;
+                    noteElement.querySelector('.parking-action-btn.delete')
+                        .addEventListener('click', () => this.deleteParkingNote(note.id));
                     parkingList.appendChild(noteElement);
                 });
             }
@@ -5197,11 +5227,20 @@
                     
                     title.textContent = '📝 Tareas Creadas';
                     message.textContent = '¿Quieres empezar un Pomodoro para trabajar en estas tareas?';
-                    buttonsContainer.innerHTML = `
-                        <button class="transition-btn" onclick="app.startNewPomodoro(); app.closeTransitionModal();">¡Sí, empezar Pomodoro!</button>
-                        <button class="transition-btn secondary" onclick="app.closeTransitionModal()">Más tarde</button>
-                    `;
-                    
+                    buttonsContainer.innerHTML = '';
+
+                    const startBtn = document.createElement('button');
+                    startBtn.className = 'transition-btn';
+                    startBtn.textContent = '¡Sí, empezar Pomodoro!';
+                    startBtn.addEventListener('click', () => { this.startNewPomodoro(); this.closeTransitionModal(); });
+                    buttonsContainer.appendChild(startBtn);
+
+                    const laterBtn = document.createElement('button');
+                    laterBtn.className = 'transition-btn secondary';
+                    laterBtn.textContent = 'Más tarde';
+                    laterBtn.addEventListener('click', () => this.closeTransitionModal());
+                    buttonsContainer.appendChild(laterBtn);
+
                     modal.classList.add('show');
                 }, 1000);
                 
@@ -5467,8 +5506,7 @@
             }
         }
         
-        // Inicializar la aplicación
-        const app = new PomoAdoro();
     </script>
+    <script src="app.js"></script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'974cf63263f02fce',t:'MTc1NjE0NDU0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
