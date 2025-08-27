@@ -5,6 +5,7 @@ import Timer from './timer.js';
 import TaskManager from './task-manager.js';
 import UI from './ui.js';
 
+// Duración predeterminada del temporizador (25 minutos)
 const DEFAULT_DURATION = 25 * 60;
 
 const taskListEl = document.getElementById('tasks');
